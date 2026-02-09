@@ -17,7 +17,7 @@ print(f"Welcome to number guessing game.\nPlease enter number within 1-10.")
 counter = 0
 
 while True:
-    
+
     enteredNumber: int = int(input("> "))
     if enteredNumber == generatedNumber:
         print(f"You won! with {counter} try")
