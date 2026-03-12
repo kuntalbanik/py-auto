@@ -1,0 +1,8 @@
+pip install requests beautifulsoup4
+
+
+1) Open the page in chrome, zoomout to 25%, take time to load all
+
+2) Inspect the div tag, copy & replace the content of  "links.html"  file
+
+3) run  "python download.py"
