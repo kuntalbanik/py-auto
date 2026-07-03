@@ -1,0 +1,29 @@
+# HTTP requests
+requests>=2.31.0
+aiohttp>=3.9.0
+
+# HTML parsing
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Browser automation for JavaScript-heavy pages
+playwright>=1.40.0
+
+# Web framework and server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Data validation
+pydantic>=2.5.0
+
+# Database
+asyncpg>=0.29.0
+
+# Cache (optional)
+redis>=5.0.0
+
+# Configuration and utilities
+python-dotenv>=1.0.0
+
+# Structured data parsing
+jsonschema>=4.20.0

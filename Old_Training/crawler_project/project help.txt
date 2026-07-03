@@ -1,0 +1,319 @@
+---
+
+# 🧠 Full System Architecture Diagram (Python-only Queue Version)
+
+নীচে আপনার system-টা কল্পনা করুন যেন একটা ব্যস্ত শহর, যেখানে URL গুলো ট্রেন আর worker গুলো স্টেশন মাস্টার 🚉
+
+```
+                +----------------------+
+                |   Seed URLs / API    |
+                +----------+-----------+
+                           |
+                           v
+                +----------------------+
+                |  Scheduler / Frontier|
+                | (Python Queue/Redis) |
+                +----------+-----------+
+                           |
+            +--------------+--------------+
+            |                             |
+            v                             v
+  +------------------+         +----------------------+
+  | Fetch Worker     |         | Render Worker        |
+  | (requests/httpx) |         | (Playwright)         |
+  +--------+---------+         +----------+-----------+
+           |                              |
+           +--------------+---------------+
+                          v
+                +----------------------+
+                |   Parser Workers     |
+                | (BeautifulSoup etc.) |
+                +----------+-----------+
+                           |
+                           v
+                +----------------------+
+                | Change Detector      |
+                +----------+-----------+
+                           |
+                           v
+                +----------------------+
+                | Storage Layer        |
+                | (Postgres + Files)   |
+                +----------+-----------+
+                           |
+            +--------------+--------------+
+            |                             |
+            v                             v
+   +-------------------+        +--------------------+
+   | Cache (Redis/Dict)|        | Search / API Layer |
+   +-------------------+        +--------------------+
+```
+
+---
+
+# ⚙️ Python-only Queue System (Kafka ছাড়া)
+
+আপনি Python দিয়েই message queue বানাতে পারেন:
+
+## Option 1: Simple (Single Machine)
+
+```python
+from queue import Queue
+
+url_queue = Queue()
+```
+
+## Option 2: Async version
+
+```python
+import asyncio
+
+queue = asyncio.Queue()
+```
+
+## Option 3: Redis (recommended lightweight)
+
+```python
+import redis
+r = redis.Redis()
+r.lpush("queue", url)
+```
+
+---
+
+# 📁 Full Production Folder Structure (Enterprise-grade)
+
+এটা আপনি copy করে project বানাতে পারবেন:
+
+```
+crawler_project/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│
+│   ├── scheduler/
+│   │   ├── frontier.py
+│   │   ├── priority.py
+│   │   ├── robots.py
+│
+│   ├── fetcher/
+│   │   ├── http_fetcher.py
+│   │   ├── playwright_fetcher.py
+│   │   ├── headers.py
+│
+│   ├── parser/
+│   │   ├── base.py
+│   │   ├── html_parser.py
+│   │   ├── structured_data.py
+│   │   ├── article_extractor.py
+│   │   ├── fallback_extractors.py
+│
+│   ├── storage/
+│   │   ├── postgres.py
+│   │   ├── file_store.py
+│   │   ├── cache.py
+│
+│   ├── models/
+│   │   ├── page.py
+│   │   ├── version.py
+│   │   ├── job.py
+│
+│   ├── services/
+│   │   ├── change_detector.py
+│   │   ├── deduper.py
+│   │   ├── canonicalizer.py
+│   │   ├── selector_manager.py
+│   │   ├── logger.py
+│
+│   ├── api/
+│   │   ├── server.py
+│   │   ├── routes.py
+│
+├── workers/
+│   ├── fetch_worker.py
+│   ├── parse_worker.py
+│
+├── utils/
+│   ├── helpers.py
+│
+├── data/
+│   ├── raw_html/
+│   ├── snapshots/
+│
+├── logs/
+│
+├── tests/
+│
+├── requirements.txt
+├── README.md
+└── run.py
+```
+
+---
+
+# 🧩 কোন ফাইল কী কাজ করবে (Clear Explanation)
+
+## 🔹 main.py
+
+System start করবে
+
+* scheduler চালাবে
+* workers চালাবে
+
+---
+
+## 🔹 scheduler/frontier.py
+
+এটাই আপনার crawler-এর “brain” 🧠
+
+* কোন URL queue-তে যাবে
+* কোনটা আগে crawl হবে
+
+---
+
+## 🔹 scheduler/robots.py
+
+* robots.txt check করবে
+* allowed URL decide করবে
+
+---
+
+## 🔹 fetcher/http_fetcher.py
+
+* requests দিয়ে page download করবে
+
+---
+
+## 🔹 fetcher/playwright_fetcher.py
+
+* JS-heavy page render করবে
+
+---
+
+## 🔹 parser/html_parser.py
+
+* BeautifulSoup দিয়ে parsing
+
+---
+
+## 🔹 parser/article_extractor.py
+
+* main content বের করবে
+
+---
+
+## 🔹 parser/fallback_extractors.py
+
+* selector fail হলে backup extraction
+
+---
+
+## 🔹 services/change_detector.py
+
+* page change detect করবে (hash compare)
+
+---
+
+## 🔹 services/canonicalizer.py
+
+* URL normalize করবে
+
+---
+
+## 🔹 storage/postgres.py
+
+* metadata save করবে
+
+---
+
+## 🔹 storage/file_store.py
+
+* HTML snapshot save করবে
+
+---
+
+## 🔹 storage/cache.py
+
+* fast response cache
+
+---
+
+## 🔹 workers/fetch_worker.py
+
+* queue থেকে URL নিয়ে fetch করবে
+
+---
+
+## 🔹 workers/parse_worker.py
+
+* HTML parse করবে
+
+---
+
+## 🔹 api/server.py
+
+* FastAPI দিয়ে API server
+
+---
+
+# 🚀 আপনি কীভাবে ZIP বানাবেন (২ মিনিটে)
+
+আপনার PC-তে:
+
+### Step 1:
+
+একটা folder বানান:
+
+```
+crawler_project
+```
+
+### Step 2:
+
+উপরের structure অনুযায়ী folders + files বানান
+
+### Step 3:
+
+Terminal-এ:
+
+```bash
+zip -r crawler_project.zip crawler_project
+```
+
+---
+
+# 🔥 Bonus: Minimal starter code (fetch worker)
+
+```python
+from queue import Queue
+import requests
+
+queue = Queue()
+
+def fetch_worker():
+    while True:
+        url = queue.get()
+        try:
+            res = requests.get(url, timeout=10)
+            print("Fetched:", url)
+        except Exception as e:
+            print("Error:", e)
+        queue.task_done()
+```
+
+---
+
+# 🎯 Next Step (আমি করতে পারি)
+
+আপনি চাইলে আমি পরের ধাপে:
+
+✅ Full working code (step-by-step)
+✅ Redis queue version
+✅ Playwright integration
+✅ Database schema SQL
+✅ API + search system
+
+অথবা যখন tool কাজ করবে, আমি সরাসরি আপনাকে ready-made ZIP download link দেব 📦
+
+বলুন—আপনি কি **working full code base** চান, নাকি **step-by-step build guide**?

@@ -1,0 +1,4 @@
+$ pip install virtualenv
+$ cd py-auto/Training/
+$ python -m venv training
+$ . training/Scripts/activate   # To activate the virtual environment
