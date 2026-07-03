@@ -1,0 +1,57 @@
+Download the installer script using wget:
+
+$ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+
+
+Run the installer script:
+
+$ bash Miniconda3-latest-Linux-x86_64.sh
+
+
+Press Enter to read the license terms and type yes to accept them.
+When asked if you want to initialize Miniconda by running conda init, type yes.
+Restart your shell to apply the changes:
+
+$ source ~/.bashrc
+
+
+Verify the installation by checking the version:
+
+$ conda --version
+
+
+
+Create the environment (e.g., named remote_env with Python 3.10):
+
+$ conda create -n remote_env python=3.10 -y
+
+
+
+Activate the environment:
+
+$ conda activate remote_env
+
+
+
+In your remote Linux terminal (with remote_env activated), install Jupyter:
+
+$ conda install pandas numpy scikit-learn matplotlib jupyter -y
+
+
+
+Before you start, set password to access:
+
+$ jupyter server password
+
+
+
+Accessing Jupyter Notebooks (No Tunneling Needed)
+
+$ jupyter notebook --no-browser --ip=0.0.0.0 --port=8888
+
+		or
+		
+$ jupyter-lab --no-browser --ip=0.0.0.0 --port=8888
+
+
