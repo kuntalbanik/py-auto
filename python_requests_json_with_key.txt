@@ -1,0 +1,11 @@
+{"title":"Profile 1","hideComment":true,"headers":[{"enabled":true,"name":"Authorization","value":"Token 0d1648a08d24791380e4ca3dca4ae16f1d495a2d","comment":""}],"respHeaders":[],"filters":[{"enabled":true,"type":"urls","urlRegex":"http://127.0.0.1:8080/*"}],"urlReplacements":[],"appendMode":false}
+
+
+python requests
+----------------
+import requests
+headers = {'Authorization' : 'Token ' + '0d1648a08d24791380e4ca3dca4ae16f1d495a2d'}
+r = requests.get('http://127.0.0.1:8080/api/feed/?format=json', headers=headers)
+print(r.json())
+
+---------------

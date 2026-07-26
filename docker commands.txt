@@ -1,0 +1,66 @@
+Pull Images
+sudo docker pull <image>:<tag>
+
+
+Start postgres on linux
+sudo docker run --name postgres -e POSTGRES_PASSWORD=123456 -p 5432:5432 -d postgres
+
+sudo docker run --name postgres -p 0.0.0.0:5432:5432 -e POSTGRES_PASSWORD=redhat -d postgres
+
+
+
+Show list of all images
+sudo docker images --all
+
+
+
+Show list of running containers
+sudo docker ps -a
+
+
+
+Stop container by name / Also can be used id
+sudo docker stop postgres
+
+
+
+Start the container
+docker start postgres
+
+
+Use docker image inside console
+--
+docker exec -it <container_name_or_id> <command> [args]
+ex: docker exec -it postgres psql -U postgres      	# Direct Login
+ex: docker exec -it postgres /bin/sh 			# Access the container shell
+    createdb --username=postgres --owner=postgres simple_bank  # Create database
+    psql simple_bank     # To access database
+    \q			 # To exit
+    dropdb simple_bank	 # To drop database
+    exit		 # To exit from container shell
+
+
+
+Remove container
+--
+docker rm <container_name>
+ex: docker rm postgres
+
+
+
+View container logs
+docker logs <container_name_or_id>
+
+
+Adjusting Memory Limits
+docker run -d --memory="512m" [image_name]
+
+==============================================
+
+Find the container: docker ps -a
+
+Stop the container: docker stop <container_id>
+
+Remove the container: docker rm <container_id>
+
+Retry image deletion: docker rmi <image_id>

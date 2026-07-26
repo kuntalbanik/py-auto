@@ -1,0 +1,7 @@
+Read only
+--
+sudo mount -t cifs //192.168.110.1/____share/ /mnt/ -o username=nat
+
+Temporary - Read & Write
+--
+sudo mount -t cifs -o rw,username=nat //192.168.110.1/____share /mnt/win

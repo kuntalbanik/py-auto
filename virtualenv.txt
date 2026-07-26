@@ -1,0 +1,15 @@
+Using default python package
+----
+
+python -m venv /path
+
+
+
+--------------------
+Using virtualenv package
+----
+pip install virtualenv
+
+virtualenv -p python3 env1  # env1 envname
+
+. env1/bin/activate

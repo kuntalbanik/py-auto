@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Revision Checklist — Agentic AI Track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #131418;
+    --bg-panel: #191b21;
+    --bg-panel-2: #1e2128;
+    --line: #2a2e38;
+    --line-soft: #22252d;
+    --text: #e7e9ee;
+    --text-dim: #9299a8;
+    --text-faint: #5c6270;
+    --py-blue: #4B8BBE;
+    --py-blue-bright: #6fb3e0;
+    --py-yellow: #FFD43B;
+    --done-green: #4caf7d;
+    --done-green-bg: rgba(76,175,125,0.10);
+    --danger: #e0637a;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --bn: 'Hind Siliguri', 'JetBrains Mono', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% -10%, rgba(75,139,190,0.10), transparent 45%),
+      radial-gradient(circle at 100% 10%, rgba(255,212,59,0.05), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--bn);
+    line-height:1.5;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  ::selection{ background:rgba(75,139,190,0.35); }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(19,20,24,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:880px; margin:0 auto; padding:14px 22px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .dots{ display:flex; gap:6px; flex-shrink:0; }
+  .dots span{ width:9px; height:9px; border-radius:50%; display:block; }
+  .dots span:nth-child(1){ background:#e0637a; }
+  .dots span:nth-child(2){ background:var(--py-yellow); }
+  .dots span:nth-child(3){ background:var(--done-green); }
+  .topbar-title{
+    font-family:var(--mono); font-size:12.5px; color:var(--text-dim);
+    letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .topbar-progress{ margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .topbar-progress-track{
+    width:130px; height:6px; background:var(--line-soft); border-radius:99px; overflow:hidden;
+  }
+  .topbar-progress-fill{
+    height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg, var(--py-blue), var(--done-green));
+    transition:width .4s ease;
+  }
+  .topbar-progress-text{ font-family:var(--mono); font-size:12px; color:var(--py-blue-bright); font-weight:600; white-space:nowrap;}
+
+  /* ---------- Hero ---------- */
+  .hero{ max-width:880px; margin:0 auto; padding:46px 22px 26px; }
+  .hero-eyebrow{
+    font-family:var(--mono); font-size:12px; color:var(--py-yellow);
+    letter-spacing:.14em; text-transform:uppercase; margin-bottom:14px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .hero-eyebrow::before{ content:">>>"; color:var(--py-blue-bright); }
+  h1{
+    font-family:var(--mono); font-weight:800; font-size:clamp(26px,4vw,38px);
+    margin:0 0 12px; letter-spacing:-0.01em; color:#fff;
+  }
+  h1 .accent{ color:var(--py-blue-bright); }
+  .hero p{ color:var(--text-dim); font-size:15.5px; max-width:640px; margin:0 0 22px; }
+  .hero-stats{ display:flex; gap:10px; flex-wrap:wrap; }
+  .stat-chip{
+    font-family:var(--mono); font-size:12.5px; color:var(--text-dim);
+    border:1px solid var(--line); background:var(--bg-panel);
+    padding:7px 12px; border-radius:99px; display:flex; align-items:center; gap:7px;
+  }
+  .stat-chip b{ color:var(--text); font-weight:700; }
+  .stat-chip.done b{ color:var(--done-green); }
+
+  /* ---------- Instructions note ---------- */
+  .note{
+    max-width:880px; margin:0 auto 30px; padding:0 22px;
+  }
+  .note-box{
+    border:1px solid var(--line); border-left:3px solid var(--py-yellow);
+    background:var(--bg-panel); border-radius:8px; padding:14px 16px;
+    font-size:13.5px; color:var(--text-dim);
+  }
+  .note-box b{ color:var(--text); }
+
+  /* ---------- Sections ---------- */
+  .wrap{ max-width:880px; margin:0 auto; padding:0 22px; display:flex; flex-direction:column; gap:14px; }
+
+  details.level{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--bg-panel);
+    overflow:hidden;
+  }
+  details.level[open]{ border-color:#33394a; }
+  details.level > summary{
+    list-style:none; cursor:pointer;
+    padding:16px 18px; display:flex; align-items:center; gap:14px;
+    user-select:none;
+  }
+  details.level > summary::-webkit-details-marker{ display:none; }
+  .lvl-num{
+    font-family:var(--mono); font-weight:800; font-size:13px;
+    color:var(--bg); background:var(--py-blue-bright);
+    width:30px; height:30px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .lvl-titles{ flex:1; min-width:0; }
+  .lvl-title{ font-family:var(--mono); font-weight:700; font-size:15px; color:#fff; }
+  .lvl-sub{ font-size:12.5px; color:var(--text-faint); margin-top:2px; }
+  .lvl-tag{
+    font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em;
+    padding:3px 8px; border-radius:5px; text-transform:uppercase; flex-shrink:0;
+  }
+  .tag-must{ background:rgba(224,99,122,0.14); color:var(--danger); }
+  .tag-high{ background:rgba(255,212,59,0.14); color:var(--py-yellow); }
+  .tag-nice{ background:rgba(75,139,190,0.14); color:var(--py-blue-bright); }
+
+  .lvl-count{
+    font-family:var(--mono); font-size:12px; color:var(--text-dim); flex-shrink:0; min-width:44px; text-align:right;
+  }
+  .lvl-count.complete{ color:var(--done-green); }
+  .chev{
+    width:16px; height:16px; flex-shrink:0; color:var(--text-faint);
+    transition:transform .2s ease;
+  }
+  details.level[open] .chev{ transform:rotate(90deg); }
+
+  .lvl-progress-track{
+    height:3px; background:var(--line-soft); width:100%;
+  }
+  .lvl-progress-fill{
+    height:100%; background:var(--py-blue); transition:width .3s ease;
+  }
+  .lvl-progress-fill.complete{ background:var(--done-green); }
+
+  .lvl-body{ padding:4px 18px 18px; border-top:1px solid var(--line-soft); }
+  .lvl-why{
+    font-size:12.5px; color:var(--text-faint); padding:12px 0 6px;
+    border-bottom:1px dashed var(--line-soft); margin-bottom:8px;
+  }
+  .lvl-why b{ color:var(--py-blue-bright); font-weight:600; }
+
+  .ex-item{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:12px 4px; border-bottom:1px solid var(--line-soft);
+  }
+  .ex-item:last-child{ border-bottom:none; }
+
+  .ex-check{
+    flex-shrink:0; width:20px; height:20px; margin-top:2px;
+    border-radius:6px; border:1.5px solid var(--line);
+    background:var(--bg-panel-2);
+    cursor:pointer; position:relative;
+    transition:all .15s ease;
+    appearance:none; -webkit-appearance:none;
+  }
+  .ex-check:hover{ border-color:var(--py-blue-bright); }
+  .ex-check:checked{
+    background:var(--done-green); border-color:var(--done-green);
+  }
+  .ex-check:checked::after{
+    content:""; position:absolute; left:6px; top:2px;
+    width:5px; height:10px;
+    border:solid var(--bg); border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+
+  .ex-text{ flex:1; min-width:0; }
+  .ex-title{
+    font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text);
+    margin-bottom:3px; transition:color .15s ease;
+  }
+  .ex-desc{ font-size:13.5px; color:var(--text-dim); }
+  .ex-item.done .ex-title{ color:var(--done-green); }
+  .ex-item.done .ex-desc{ color:var(--text-faint); text-decoration:line-through; text-decoration-color:var(--line); }
+  .ex-item.done{ background:var(--done-green-bg); border-radius:6px; }
+
+  .ex-hint{
+    display:inline-block; margin-top:6px; font-family:var(--mono); font-size:11px;
+    color:var(--text-faint); background:var(--bg); border:1px solid var(--line-soft);
+    padding:2px 7px; border-radius:5px;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer{
+    max-width:880px; margin:34px auto 0; padding:20px 22px 0;
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+  .footer p{ font-size:12px; color:var(--text-faint); font-family:var(--mono); margin:14px 0 0;}
+  .reset-btn{
+    font-family:var(--mono); font-size:12px; color:var(--text-dim);
+    background:var(--bg-panel); border:1px solid var(--line);
+    padding:8px 14px; border-radius:7px; cursor:pointer; margin-top:14px;
+  }
+  .reset-btn:hover{ border-color:var(--danger); color:var(--danger); }
+
+  @media (max-width:560px){
+    .topbar-title{ display:none; }
+    .lvl-sub{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="topbar-title">python_revision.py — 12 levels</div>
+    <div class="topbar-progress">
+      <div class="topbar-progress-track"><div class="topbar-progress-fill" id="topFill"></div></div>
+      <div class="topbar-progress-text" id="topText">0 / 0</div>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">revision checklist</div>
+  <h1>Python <span class="accent">Revision</span> Tracker</h1>
+  <p>Basics থেকে Agentic AI / MCP-এর জন্য দরকারি advanced topic পর্যন্ত — প্রতিটা exercise নিজে হাতে code করে test করো, তারপর ✓ দাও। শুধু পড়ে গেলে হবে না।</p>
+  <div class="hero-stats">
+    <div class="stat-chip">📦 <b id="statTotal">0</b> exercises</div>
+    <div class="stat-chip">🧩 12 levels</div>
+    <div class="stat-chip done">✅ <b id="statDone">0</b> completed</div>
+  </div>
+</div>
+
+<div class="note">
+  <div class="note-box">
+    <b>Note:</b> এটা একটা standalone HTML file — browser-এ খোলা অবস্থায় tick করলে progress ঠিকই থাকবে, কিন্তু ট্যাব বন্ধ করে file আবার খুললে checkbox reset হয়ে যাবে (কারণ এতে কোনো save/storage রাখা হয়নি)। তাই <b>এক বসায় revise করে যেটুকু শেষ করলে সেটা মনে/নোটে রেখে দাও</b>, অথবা প্রতিটা level শেষ করার পর screenshot নিয়ে রাখো।
+  </div>
+</div>
+
+<div class="wrap" id="levelsWrap"></div>
+
+<div class="footer">
+  <button class="reset-btn" onclick="resetAll()">↺ Reset all checkmarks</button>
+</div>
+<p style="max-width:880px;margin:14px auto 0;padding:0 22px;font-family:var(--mono);font-size:11.5px;color:var(--text-faint);">Made for Agentic AI / RAG / MCP prep — revise only what you need, skip what you already know well.</p>
+
+<script>
+const LEVELS = [
+  {
+    tag: "must", title: "Level 1 — Basics (Foundation)",
+    sub: "Variables, operators, conditionals, loops",
+    exercises: [
+      ["Variable & f-string", "Variable-এ নাম, বয়স, শহর রাখো এবং f-string দিয়ে একটা formatted sentence print করো।"],
+      ["Calculator", "দুইটা number input নিয়ে তাদের sum, difference, product, division print করো।"],
+      ["Temperature converter", "Celsius থেকে Fahrenheit-এ convert করার একটা ছোট script বানাও।", "formula: F = C*9/5 + 32"],
+      ["String slicing", "একটা word-এর প্রথম ৩টা ও শেষ ৩টা character slicing দিয়ে print করো।"],
+      ["Odd/Even checker", "একটা number নিয়ে if-else দিয়ে বলে দাও সেটা odd না even।"],
+      ["Loop with skip", "1 থেকে 10 পর্যন্ত print করো for loop দিয়ে, কিন্তু 5 কে skip করো continue দিয়ে।"]
+    ]
+  },
+  {
+    tag: "must", title: "Level 2 — Data Structures",
+    sub: "List, Tuple, Dictionary, Set",
+    exercises: [
+      ["Sorted list", "৫টা fruit রেখে list বানাও, তারপর sorted order-এ print করো।"],
+      ["List comprehension", "1-20 এর মধ্যে সব even number দিয়ে একটা নতুন list বানাও list comprehension দিয়ে।"],
+      ["Dictionary — max value", "একটা dictionary বানাও (student: marks), সবচেয়ে বেশি marks পাওয়া student বের করো।"],
+      ["Set operations", "দুইটা set নিয়ে তাদের union এবং intersection বের করো।"],
+      ["List of dicts", "৩ জন student-এর (name + age) একটা list of dict বানাও, loop করে সবার তথ্য print করো।"],
+      ["Tuple unpacking", "একটা (x, y) tuple থেকে x, y আলাদা করো tuple unpacking দিয়ে।"]
+    ]
+  },
+  {
+    tag: "must", title: "Level 3 — Functions",
+    sub: "Parameters, *args/**kwargs, lambda, docstrings",
+    exercises: [
+      ["Bigger number", "দুইটা number নিয়ে বড়টা return করে এমন একটা function লেখো।"],
+      ["Default argument", "Default argument সহ একটা greet(name, greeting=\"Hello\") function বানাও।"],
+      ["*args sum", "*args ব্যবহার করে এমন একটা function বানাও যা যেকোনো সংখ্যক number-এর sum দেয়।"],
+      ["**kwargs printer", "**kwargs দিয়ে একটা function বানাও যা সব key-value pair print করে।"],
+      ["Lambda + sort", "Lambda function দিয়ে একটা list of dict কে কোনো key অনুযায়ী sort করো।"],
+      ["Docstring", "একটা function-এ docstring লেখো, তারপর help(function_name) দিয়ে সেটা দেখো।"]
+    ]
+  },
+  {
+    tag: "must", title: "Level 4 — OOP (Object-Oriented Programming)",
+    sub: "Class, inheritance, dunder methods, static/class method",
+    why: "LangChain, CrewAI, MCP — সব framework class-based। Agent, Tool, Server সবকিছু class দিয়ে define হয়।",
+    exercises: [
+      ["Basic class", "একটা Car class বানাও __init__(brand, model) সহ, এবং একটা display_info() method।"],
+      ["Inheritance", "Car থেকে inherit করে ElectricCar class বানাও, নতুন attribute battery_range যোগ করো।"],
+      ["__str__ override", "__str__ method override করো যাতে object print করলে সুন্দর করে দেখায়।"],
+      ["Class vs instance variable", "একটা example বানাও যেখানে class variable আর instance variable-এর পার্থক্য স্পষ্ট বোঝা যায়।"],
+      ["@staticmethod", "@staticmethod দিয়ে একটা utility method বানাও, যেমন is_valid_year(year)।"],
+      ["@classmethod", "@classmethod দিয়ে একটা alternative constructor বানাও (যেমন: from_string দিয়ে object তৈরি)।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 5 — Error Handling",
+    sub: "try/except/finally, custom exceptions",
+    exercises: [
+      ["Division by zero", "try-except দিয়ে division by zero handle করো।"],
+      ["Multiple except", "একই try block-এ ValueError আর TypeError আলাদা করে handle করো multiple except দিয়ে।"],
+      ["Custom exception", "একটা custom exception class বানাও (InsufficientBalanceError) এবং raise করো।"],
+      ["finally block", "finally block ব্যবহার করে দেখাও যে error হোক বা না হোক, সেটা সবসময় চলে।"],
+      ["File not found", "একটা না-থাকা file open করার চেষ্টা করে FileNotFoundError handle করো।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 6 — File & JSON Handling",
+    sub: "Read/write files, working with JSON",
+    why: "API response সাধারণত JSON আকারে আসে — RAG/Agent কাজের জন্য must-know।",
+    exercises: [
+      ["Write & read file", "with open() ব্যবহার করে একটা text file-এ ৩ লাইন লেখো, তারপর পড়ে print করো।"],
+      ["Dict to JSON", "একটা Python dictionary-কে json.dump() দিয়ে একটা JSON file-এ save করো।"],
+      ["JSON to dict", "JSON file থেকে json.load() দিয়ে data ফেরত এনে Python dict বানাও।"],
+      ["Nested JSON", "একটা nested JSON (list of dict) থেকে কোনো specific value খুঁজে বের করো।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 7 — Modules & Packages",
+    sub: "import, venv, pip, standard library",
+    exercises: [
+      ["Custom module", "নিজের একটা module বানাও (mymath.py), তারপর সেটা import করে ব্যবহার করো।"],
+      ["Virtual environment", "venv দিয়ে একটা virtual environment বানাও এবং activate করো।"],
+      ["pip + requirements.txt", "pip install দিয়ে একটা package install করো, তারপর requirements.txt বানাও।"],
+      ["datetime module", "datetime module দিয়ে current date আর time print করো।"],
+      ["random module", "random module দিয়ে 1-100 এর মধ্যে একটা random number generate করো।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 8 — Type Hints & Pydantic",
+    sub: "Type annotations, BaseModel, validation",
+    why: "MCP tools, structured output, LangChain-এর data validation সব Pydantic দিয়ে হয়।",
+    exercises: [
+      ["Type hints", "একটা function-এ parameter আর return type-এ type hints যোগ করো।"],
+      ["Optional / Union", "Optional এবং Union ব্যবহার করে একটা function লেখো (typing থেকে import করে)।"],
+      ["Pydantic model", "Pydantic দিয়ে একটা User model বানাও (name: str, age: int, email: str)।"],
+      ["Field validation", "Pydantic model-এ validation যোগ করো, যেমন: age অবশ্যই positive হতে হবে।"],
+      ["Invalid data test", "ইচ্ছাকৃতভাবে ভুল data দিয়ে Pydantic model বানানোর চেষ্টা করো — error message-টা দেখো।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 9 — Decorators",
+    sub: "Custom decorators, @staticmethod, @property",
+    why: "FastMCP-এ @mcp.tool(), @mcp.resource() — সবকিছুই decorator pattern।",
+    exercises: [
+      ["Basic decorator", "একটা simple decorator বানাও যা function call হওয়ার আগে ও পরে কিছু print করে।"],
+      ["Timing decorator", "একটা decorator বানাও যা মেপে দেয় function চলতে কত সময় লাগলো।"],
+      ["@property", "@property ব্যবহার করে একটা class-এ computed attribute বানাও (যেমন: area from radius)।"],
+      ["Simulate @mcp.tool()", "নিজের decorator দিয়ে ঠিক @mcp.tool()-এর মতো একটা pattern practice হিসেবে বানাও।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 10 — Asynchronous Programming",
+    sub: "async/await, asyncio basics",
+    why: "MCP server আর Agent framework-এর core প্রায় পুরোটাই async-based — সবচেয়ে বেশি skip করা কিন্তু সবচেয়ে জরুরি টপিক।",
+    exercises: [
+      ["Basic async function", "একটা async def function লেখো এবং asyncio.run() দিয়ে call করো।"],
+      ["await asyncio.sleep", "await asyncio.sleep(2) দিয়ে একটা delay simulate করো।"],
+      ["asyncio.gather", "দুইটা async function একসাথে চালাও asyncio.gather() দিয়ে।"],
+      ["Sync vs async timing", "একই কাজ sync আর async ভাবে করে execution time compare করো।"]
+    ]
+  },
+  {
+    tag: "high", title: "Level 11 — Working with APIs",
+    sub: "requests library, JSON response, .env",
+    exercises: [
+      ["GET request", "requests.get() দিয়ে একটা public API (যেমন JSONPlaceholder) থেকে data আনো।"],
+      ["Status code check", "API response-এর status code check করে success/fail handle করো।"],
+      ["Parse JSON response", "API থেকে আসা JSON response থেকে specific field বের করে print করো।"],
+      ["Environment variable", ".env file বানাও এবং python-dotenv দিয়ে একটা fake API key load করো।"],
+      ["POST request", "কোনো dummy API-তে data সহ একটা POST request পাঠাও।"]
+    ]
+  },
+  {
+    tag: "nice", title: "Level 12 — Iterators & Generators",
+    sub: "yield, generator expressions",
+    why: "LLM output token-by-token আসে (streaming) — generator-এর concept বুঝলে সেটা সহজ লাগবে।",
+    exercises: [
+      ["Basic generator", "yield ব্যবহার করে একটা generator function বানাও যা 1 থেকে n পর্যন্ত number দেয়।"],
+      ["Generator expression", "Generator expression দিয়ে memory-efficient একটা square-number sequence বানাও।"],
+      ["Infinite generator", "একটা infinite generator বানাও (যেমন Fibonacci), next() দিয়ে প্রথম ৫টা value নাও।"]
+    ]
+  }
+];
+
+const wrap = document.getElementById('levelsWrap');
+let totalCount = 0;
+
+LEVELS.forEach((lvl, li) => {
+  const details = document.createElement('details');
+  details.className = 'level';
+  if (li === 0) details.open = true;
+
+  const tagLabel = lvl.tag === 'must' ? 'Must Know' : lvl.tag === 'high' ? 'High Priority' : 'Nice to Have';
+  const tagClass = lvl.tag === 'must' ? 'tag-must' : lvl.tag === 'high' ? 'tag-high' : 'tag-nice';
+
+  const summary = document.createElement('summary');
+  summary.innerHTML = `
+    <div class="lvl-num">${String(li+1).padStart(2,'0')}</div>
+    <div class="lvl-titles">
+      <div class="lvl-title">${lvl.title}</div>
+      <div class="lvl-sub">${lvl.sub}</div>
+    </div>
+    <div class="lvl-tag ${tagClass}">${tagLabel}</div>
+    <div class="lvl-count" id="count-${li}">0/${lvl.exercises.length}</div>
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+  `;
+  details.appendChild(summary);
+
+  const progressTrack = document.createElement('div');
+  progressTrack.className = 'lvl-progress-track';
+  progressTrack.innerHTML = `<div class="lvl-progress-fill" id="fill-${li}" style="width:0%"></div>`;
+  details.appendChild(progressTrack);
+
+  const body = document.createElement('div');
+  body.className = 'lvl-body';
+
+  if (lvl.why) {
+    const why = document.createElement('div');
+    why.className = 'lvl-why';
+    why.innerHTML = `<b>কেন গুরুত্বপূর্ণ:</b> ${lvl.why}`;
+    body.appendChild(why);
+  }
+
+  lvl.exercises.forEach((ex, ei) => {
+    totalCount++;
+    const item = document.createElement('div');
+    item.className = 'ex-item';
+    const hint = ex[2] ? `<span class="ex-hint">${ex[2]}</span>` : '';
+    item.innerHTML = `
+      <input type="checkbox" class="ex-check" id="chk-${li}-${ei}" data-level="${li}">
+      <div class="ex-text">
+        <div class="ex-title">${ex[0]}</div>
+        <div class="ex-desc">${ex[1]}</div>
+        ${hint}
+      </div>
+    `;
+    body.appendChild(item);
+  });
+
+  details.appendChild(body);
+  wrap.appendChild(details);
+});
+
+document.getElementById('statTotal').textContent = totalCount;
+
+function updateAll(){
+  let doneTotal = 0;
+  LEVELS.forEach((lvl, li) => {
+    const checks = document.querySelectorAll(`input[data-level="${li}"]`);
+    let doneCount = 0;
+    checks.forEach(c => { if (c.checked) doneCount++; });
+    doneTotal += doneCount;
+
+    document.getElementById(`count-${li}`).textContent = `${doneCount}/${lvl.exercises.length}`;
+    document.getElementById(`count-${li}`).classList.toggle('complete', doneCount === lvl.exercises.length);
+    const pct = (doneCount / lvl.exercises.length) * 100;
+    const fill = document.getElementById(`fill-${li}`);
+    fill.style.width = pct + '%';
+    fill.classList.toggle('complete', pct === 100);
+  });
+
+  document.getElementById('statDone').textContent = doneTotal;
+  document.getElementById('topText').textContent = `${doneTotal} / ${totalCount}`;
+  document.getElementById('topFill').style.width = totalCount ? (doneTotal/totalCount*100) + '%' : '0%';
+}
+
+wrap.addEventListener('change', (e) => {
+  if (e.target.classList.contains('ex-check')) {
+    e.target.closest('.ex-item').classList.toggle('done', e.target.checked);
+    updateAll();
+  }
+});
+
+function resetAll(){
+  if(!confirm('সব checkmark মুছে ফেলতে চাও?')) return;
+  document.querySelectorAll('.ex-check').forEach(c => {
+    c.checked = false;
+    c.closest('.ex-item').classList.remove('done');
+  });
+  updateAll();
+}
+
+updateAll();
+</script>
+
+</body>
+</html>
