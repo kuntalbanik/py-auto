@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python — Deep Internals & Professional Curriculum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0d0e12;
+    --bg-panel: #15171d;
+    --bg-panel-2: #1a1d24;
+    --bg-code: #08090c;
+    --line: #262a34;
+    --line-soft: #1c1f27;
+    --text: #e7e9ee;
+    --text-dim: #939aab;
+    --text-faint: #5b6272;
+    --py-blue: #4B8BBE;
+    --py-blue-bright: #6fb3e0;
+    --gold: #e8b84b;
+    --gold-bright: #f5cd6e;
+    --done-green: #4caf7d;
+    --done-green-bg: rgba(76,175,125,0.10);
+    --danger: #e0637a;
+    --purple: #a78bfa;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --bn: 'Hind Siliguri', 'JetBrains Mono', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% -10%, rgba(232,184,75,0.10), transparent 45%),
+      radial-gradient(circle at 100% 5%, rgba(75,139,190,0.08), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--bn);
+    line-height:1.5;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  ::selection{ background:rgba(232,184,75,0.30); }
+
+  .topbar{ position:sticky; top:0; z-index:50; background:rgba(13,14,18,0.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .topbar-inner{ max-width:920px; margin:0 auto; padding:14px 22px; display:flex; align-items:center; gap:16px; }
+  .dots{ display:flex; gap:6px; flex-shrink:0; }
+  .dots span{ width:9px; height:9px; border-radius:50%; display:block; }
+  .dots span:nth-child(1){ background:#e0637a; }
+  .dots span:nth-child(2){ background:var(--gold); }
+  .dots span:nth-child(3){ background:var(--done-green); }
+  .topbar-title{ font-family:var(--mono); font-size:12.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar-progress{ margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .topbar-progress-track{ width:130px; height:6px; background:var(--line-soft); border-radius:99px; overflow:hidden; }
+  .topbar-progress-fill{ height:100%; width:0%; border-radius:99px; background:linear-gradient(90deg, var(--gold), var(--done-green)); transition:width .4s ease; }
+  .topbar-progress-text{ font-family:var(--mono); font-size:12px; color:var(--gold-bright); font-weight:600; white-space:nowrap;}
+
+  .hero{ max-width:920px; margin:0 auto; padding:44px 22px 24px; }
+  .hero-eyebrow{ font-family:var(--mono); font-size:12px; color:var(--gold); letter-spacing:.12em; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .hero-eyebrow::before{ content:">>> import cpython"; color:var(--py-blue-bright); }
+  h1{ font-family:var(--mono); font-weight:800; font-size:clamp(21px,4vw,32px); margin:0 0 12px; letter-spacing:-0.01em; color:#fff; }
+  h1 .accent{ color:var(--gold-bright); }
+  .hero p{ color:var(--text-dim); font-size:14.5px; max-width:700px; margin:0 0 18px; }
+  .hero-stats{ display:flex; gap:10px; flex-wrap:wrap; }
+  .stat-chip{ font-family:var(--mono); font-size:12px; color:var(--text-dim); border:1px solid var(--line); background:var(--bg-panel); padding:6px 11px; border-radius:99px; display:flex; align-items:center; gap:6px; }
+  .stat-chip b{ color:var(--text); font-weight:700; }
+  .stat-chip.done b{ color:var(--done-green); }
+
+  .part-label{ max-width:920px; margin:28px auto 10px; padding:0 22px; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--purple); display:flex; align-items:center; gap:10px; }
+  .part-label::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .part-desc{ max-width:920px; margin:0 auto 14px; padding:0 22px; font-size:13px; color:var(--text-faint); }
+
+  .note{ max-width:920px; margin:0 auto 22px; padding:0 22px; }
+  .note-box{ border:1px solid var(--line); border-left:3px solid var(--gold); background:var(--bg-panel); border-radius:8px; padding:13px 16px; font-size:13px; color:var(--text-dim); }
+  .note-box b{ color:var(--text); }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:0 22px; display:flex; flex-direction:column; gap:12px; }
+
+  details.level{ border:1px solid var(--line); border-radius:var(--radius); background:var(--bg-panel); overflow:hidden; }
+  details.level[open]{ border-color:#5a4a26; }
+  details.level > summary{ list-style:none; cursor:pointer; padding:15px 18px; display:flex; align-items:center; gap:14px; user-select:none; }
+  details.level > summary::-webkit-details-marker{ display:none; }
+  .lvl-num{ font-family:var(--mono); font-weight:800; font-size:12px; color:var(--bg); background:var(--gold-bright); width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .lvl-titles{ flex:1; min-width:0; }
+  .lvl-title{ font-family:var(--mono); font-weight:700; font-size:14px; color:#fff; }
+  .lvl-sub{ font-size:12px; color:var(--text-faint); margin-top:2px; }
+  .lvl-count{ font-family:var(--mono); font-size:11.5px; color:var(--text-dim); flex-shrink:0; min-width:40px; text-align:right; }
+  .lvl-count.complete{ color:var(--done-green); }
+  .chev{ width:15px; height:15px; flex-shrink:0; color:var(--text-faint); transition:transform .2s ease; }
+  details.level[open] .chev{ transform:rotate(90deg); }
+
+  .lvl-progress-track{ height:3px; background:var(--line-soft); width:100%; }
+  .lvl-progress-fill{ height:100%; background:var(--gold); transition:width .3s ease; }
+  .lvl-progress-fill.complete{ background:var(--done-green); }
+
+  .lvl-body{ padding:4px 18px 16px; border-top:1px solid var(--line-soft); }
+
+  .ex-item{ padding:14px 4px; border-bottom:1px solid var(--line-soft); }
+  .ex-item:last-child{ border-bottom:none; }
+  .ex-row{ display:flex; align-items:flex-start; gap:12px; }
+  .ex-check{ flex-shrink:0; width:20px; height:20px; margin-top:2px; border-radius:6px; border:1.5px solid var(--line); background:var(--bg-panel-2); cursor:pointer; position:relative; transition:all .15s ease; appearance:none; -webkit-appearance:none; }
+  .ex-check:hover{ border-color:var(--gold-bright); }
+  .ex-check:checked{ background:var(--done-green); border-color:var(--done-green); }
+  .ex-check:checked::after{ content:""; position:absolute; left:6px; top:2px; width:5px; height:10px; border:solid var(--bg); border-width:0 2px 2px 0; transform:rotate(45deg); }
+
+  .ex-text{ flex:1; min-width:0; }
+  .ex-title{ font-family:var(--mono); font-size:13.5px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .ex-item.done .ex-title{ color:var(--done-green); }
+  .ex-item.done{ background:var(--done-green-bg); border-radius:6px; }
+
+  .ex-block{ margin-top:9px; border-radius:6px; padding:10px 12px; font-size:12.5px; line-height:1.6; }
+  .ex-what{ background:var(--bg-panel-2); border:1px solid var(--line-soft); border-left:3px solid var(--py-blue); color:var(--text-dim); }
+  .ex-what b{ color:var(--py-blue-bright); }
+  .ex-where{ background:var(--bg-panel-2); border:1px solid var(--line-soft); border-left:3px solid var(--gold); color:var(--text-dim); }
+  .ex-where b{ color:var(--gold-bright); }
+  .ex-alt{ background:var(--bg-panel-2); border:1px solid var(--line-soft); border-left:3px solid var(--purple); color:var(--text-dim); }
+  .ex-alt b{ color:var(--purple); }
+  .ex-practice{ background:rgba(76,175,125,0.06); border:1px solid rgba(76,175,125,0.18); border-left:3px solid var(--done-green); color:var(--text-dim); }
+  .ex-practice b{ color:var(--done-green); }
+
+  .ex-code-wrap{ margin-top:9px; border-radius:8px; overflow:hidden; border:1px solid var(--line); }
+  .ex-code-head{ background:#111318; padding:6px 12px; font-family:var(--mono); font-size:10.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px; border-bottom:1px solid var(--line); }
+  .ex-code-head::before{ content:"●"; color:var(--gold); font-size:8px; }
+  pre.ex-code{ margin:0; padding:12px 14px; background:var(--bg-code); overflow-x:auto; font-family:var(--mono); font-size:11.5px; line-height:1.65; color:#d4d8e0; white-space:pre; }
+
+  .insight-box{
+    background:linear-gradient(135deg, rgba(232,184,75,0.07), rgba(75,139,190,0.05));
+    border:1px solid rgba(232,184,75,0.25); border-radius:8px; padding:12px 14px;
+    font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-top:8px;
+  }
+  .insight-box b{ color:var(--gold-bright); }
+
+  .footer{ max-width:920px; margin:34px auto 0; padding:20px 22px 0; border-top:1px solid var(--line); }
+  .reset-btn{ font-family:var(--mono); font-size:12px; color:var(--text-dim); background:var(--bg-panel); border:1px solid var(--line); padding:8px 14px; border-radius:7px; cursor:pointer; margin-top:14px; }
+  .reset-btn:hover{ border-color:var(--danger); color:var(--danger); }
+
+  @media (max-width:560px){ .topbar-title{ display:none; } .lvl-sub{ display:none; } pre.ex-code{ font-size:10.5px; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="topbar-title">cpython_internals.py — deep dive</div>
+    <div class="topbar-progress">
+      <div class="topbar-progress-track"><div class="topbar-progress-fill" id="topFill"></div></div>
+      <div class="topbar-progress-text" id="topText">0 / 0</div>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">professional-level deep dive</div>
+  <h1>Python — <span class="accent">CPython Internals</span> & Architecture</h1>
+  <p>এটা elementary tutorial না — এখানে Python <b>কীভাবে ভেতরে কাজ করে</b> সেটা বোঝানো হয়েছে: object model, memory management, interpreter internals, C extension, packaging, এবং সেই metaprogramming যা Django/SQLAlchemy/Pydantic-এর মতো framework ব্যবহার করে। প্রতিটা topic-এ কী/কেন/কোথায় ব্যবহার/বিকল্প কী — সব থাকবে, সাথে real code।</p>
+  <div class="hero-stats">
+    <div class="stat-chip">🧠 <b id="statTotal">0</b> deep topics</div>
+    <div class="stat-chip">🏛️ 5 chapters</div>
+    <div class="stat-chip">💻 runnable code</div>
+    <div class="stat-chip done">✅ <b id="statDone">0</b> completed</div>
+  </div>
+</div>
+
+<div class="note">
+  <div class="note-box">
+    <b>Note:</b> Standalone HTML — tab বন্ধ করলে tick reset হয়। প্রতিটা code নিজে চালিয়ে output দেখো, শুধু পড়ে বুঝে গেলে ভুল ধারণা হতে পারে — internals-এর জিনিস চোখে দেখলেই আসল বোঝা হয়।
+  </div>
+</div>
+
+<div class="part-label">Part A — CPython Internals & Advanced Architecture</div>
+<div class="part-desc">তোমার দেওয়া অধ্যায় ১-৫ অনুযায়ী, প্রতিটা topic-এ real-world framework reference (Django, NumPy, SQLAlchemy) সহ গভীর ব্যাখ্যা।</div>
+<div class="wrap" id="wrap-A"></div>
+
+<div class="part-label">Part B — কীভাবে এগুলো তোমার Practical Python-এর সাথে যুক্ত</div>
+<div class="part-desc">তোমার আগের Python revision checklist-এর প্রতিটা Level-এর পেছনে যে internals-এর কারণ লুকিয়ে আছে, সেটা এখানে। (Exercise আগের checklist file-এই আছে — এখানে শুধু গভীর insight যোগ করা হলো, পুনরাবৃত্তি না করে।)</div>
+<div class="wrap" id="wrap-B"></div>
+
+<div class="footer">
+  <button class="reset-btn" onclick="resetAll()">↺ Reset all checkmarks</button>
+</div>
+<p style="max-width:920px;margin:14px auto 0;padding:0 22px;font-family:var(--mono);font-size:11px;color:var(--text-faint);">Part A based on user-provided CPython internals syllabus. Part B extends the earlier Python revision checklist with internals-level insight.</p>
+
+<script>
+const CHAPTERS = {
+"1": { title:"অধ্যায় ১ — ফান্ডামেন্টাল ও মেমোরি মডেল", sub:"Object Model, Mutable/Immutable, Garbage Collection", items:[
+  ["1.1 অবজেক্ট মডেল (Object Model)",
+   "Python-এ সবকিছু (int, function, class, module) একটা <b>PyObject</b> — C struct যাতে অন্তত একটা reference count (ob_refcnt) আর type pointer (ob_type) থাকে। id() ফাংশন CPython-এ object-এর memory address-ই return করে। 'Variable' মানে কোনো বক্সে value বসানো না — এটা একটা object-এর দিকে একটা নাম-লেবেল আটকে দেওয়া।",
+   "Attribute lookup, method dispatch, isinstance() check — সবকিছুই ob_type pointer দিয়ে ঘটে। CPython-এ ছোট integer (-5 থেকে 256) আর ছোট string cached/interned থাকে পারফরম্যান্সের জন্য।",
+   "PyPy একই concept ব্যবহার করে কিন্তু RPython + JIT দিয়ে ভিন্নভাবে implement করে — অনেক দ্রুত, কিন্তু C extension compatibility কম।",
+`import sys
+
+a = 300
+b = 300
+print(a is b)                 # ছোট int cache-এর বাইরে হলে False হতে পারে
+print(sys.getrefcount(a))     # ob_refcnt
+
+class Demo:
+    pass
+
+obj = Demo()
+print(id(obj))                # CPython-এ এটাই memory address
+print(type(obj))              # ob_type pointer
+print(sys.getrefcount(obj))`,
+   "-5 থেকে 256-এর মধ্যে দুইটা int variable বানিয়ে `is` দিয়ে compare করো, তারপর 257-এর বেশি সংখ্যা দিয়ে একই test করো — CPython-এর integer caching behavior document করে ব্যাখ্যা দাও কেন এমন হয়।"],
+  ["1.2 মিউটেবল বনাম ইমিউটেবল",
+   "Assignment (a = 5) মানে 'a' নামটা 5-নামের object-কে point করছে। Mutable object (list, dict, set) in-place modify হয় (id() একই থাকে); immutable (int, str, tuple) modify করলে আসলে নতুন object তৈরি হয়।",
+   "Function default argument নির্ধারণে, deep vs shallow copy সিদ্ধান্তে, এবং thread-safety বিবেচনায় (immutable object by-default thread-safe) — এই concept সরাসরি কাজে আসে।",
+   "Functional language (Haskell, Clojure)-এ সব default immutable। Python-এ dataclass(frozen=True) বা NamedTuple দিয়ে সেই আচরণ emulate করা যায়।",
+`def append_item(item, target=[]):   # ⚠️ classic bug
+    target.append(item)
+    return target
+
+print(append_item(1))   # [1]
+print(append_item(2))   # [1, 2] <- আশা ছিল [2]!
+
+def append_item_fixed(item, target=None):
+    if target is None:
+        target = []
+    target.append(item)
+    return target
+
+s = "hello"
+print(id(s))
+s += " world"            # নতুন string object তৈরি হলো
+print(id(s))              # আলাদা id`,
+   "উপরের mutable-default bug demonstrate করো, তারপর dataclass(frozen=True) দিয়ে immutable Point(x, y) class বানাও — mutate করার চেষ্টায় কী error আসে দেখো।"],
+  ["1.3 গারবেজ কালেকশন",
+   "CPython প্রধানত <b>reference counting</b> দিয়ে memory manage করে — refcount 0 হলে সাথে সাথে deallocate হয়। কিন্তু circular reference (A→B→A) refcount দিয়ে ধরা যায় না, তাই একটা আলাদা <b>generational cyclic GC</b> (gc module) periodically চলে সেগুলো খুঁজে বের করে।",
+   "Long-running server (web app, ML training loop)-এ memory leak এড়াতে এটা জানা জরুরি — বিশেষত bidirectional reference (parent↔child) থাকা object graph-এ।",
+   "Java/Go-এর মতো ভাষায় pure tracing GC (refcounting নেই) — trade-off ভিন্ন: pause-time বনাম immediate deallocation।",
+`import gc, sys
+
+class Node:
+    def __init__(self, name):
+        self.name = name
+        self.ref = None
+
+a = Node("A")
+b = Node("B")
+a.ref = b
+b.ref = a   # circular reference
+
+print(sys.getrefcount(a))
+del a, b     # refcount 0 হবে না, শুধু del করলে মুক্তি পাবে না
+print("collected:", gc.collect())   # cyclic GC manually trigger`,
+   "__del__ method সহ দুটো object দিয়ে circular reference বানাও, gc.collect() ছাড়া প্রথমে দেখো object destroy হচ্ছে কিনা, তারপর gc.collect() কল করে পার্থক্য দেখো।"]
+]},
+"2": { title:"অধ্যায় ২ — CPython ইন্টারপ্রেটারের অভ্যন্তর", sub:"Bytecode, AST, PVM, GIL", items:[
+  ["2.1 সোর্স কোড থেকে বাইটকোড",
+   "Run করার আগে Python কোড <b>compile()</b> ধাপে bytecode-এ রূপান্তরিত হয় — এটা machine code না, Python Virtual Machine-এর নিজস্ব instruction set। __pycache__-এ .pyc cache থাকে, বারবার compile এড়াতে।",
+   "dis module দিয়ে bytecode inspect করে performance bottleneck বা unexpected behavior debug করা যায় (advanced debugging/optimization-এর সময়)।",
+   "Cython/mypyc সরাসরি C-এ কম্পাইল করে, PyPy bytecode-কে runtime-এ machine code-এ JIT-compile করে — অনেক দ্রুত।",
+`import dis
+
+def add(a, b):
+    return a + b
+
+dis.dis(add)
+# LOAD_FAST    a
+# LOAD_FAST    b
+# BINARY_OP    +
+# RETURN_VALUE`,
+   "দুইটা function লেখো — একটা for loop দিয়ে sum করে, একটা sum() built-in ব্যবহার করে — dis.dis() দিয়ে bytecode compare করো, কোনটা কম instruction ব্যবহার করছে দেখো।"],
+  ["2.2 অ্যাবস্ট্রাক্ট সিনট্যাক্স ট্রি (AST)",
+   "Bytecode-এ যাওয়ার আগে কোড প্রথমে <b>AST</b>-এ পার্স হয় — কোডের গঠন tree হিসেবে represent করে। ast module দিয়ে নিজে কোড analyze/transform করা যায়।",
+   "Linter (pylint, flake8), formatter (black), এমনকি security scanner (untrusted code-এ dangerous call আছে কিনা) — সবই AST ব্যবহার করে।",
+   "Regex দিয়ে code pattern খোঁজা যায় কিন্তু fragile; AST semantically সঠিক analysis দেয়।",
+`import ast
+
+code = "x = 1 + 2 * 3"
+tree = ast.parse(code)
+print(ast.dump(tree, indent=2))
+
+class NameCollector(ast.NodeVisitor):
+    def visit_Name(self, node):
+        print("Found variable:", node.id)
+        self.generic_visit(node)
+
+NameCollector().visit(ast.parse("result = x + y * z"))`,
+   "একটা AST visitor লেখো যা একটা code string-এ কতগুলো function call আছে গুনে দেয় (ast.Call node visit করে)।"],
+  ["2.3 পাইথন ভার্চুয়াল মেশিন (PVM)",
+   "PVM হলো সেই C প্রোগ্রাম (CPython-এর ceval.c) যা bytecode instruction একে একে execute করে, একটা 'evaluation loop'-এ। প্রতিটা instruction (LOAD_FAST, BINARY_OP) dispatch হয়ে C-level কাজ করে।",
+   "সরাসরি এই layer নিয়ে কাজ করতে হয় না, কিন্তু 'Python কেন slow' প্রশ্নের আসল উত্তর এখানে — প্রতিটা bytecode dispatch-এর overhead compiled language-এ নেই।",
+   "PyPy-র equivalent একটা JIT compiler দিয়ে 'hot' code path সরাসরি machine code-এ কম্পাইল করে, dispatch overhead এড়িয়ে যায়।",
+`import timeit
+
+def pure_loop():
+    total = 0
+    for i in range(1_000_000):
+        total += i
+    return total
+
+def builtin_sum():
+    return sum(range(1_000_000))
+
+print("pure loop:", timeit.timeit(pure_loop, number=10))
+print("builtin sum:", timeit.timeit(builtin_sum, number=10))`,
+   "উপরের বেঞ্চমার্ক চালাও, পার্থক্য দেখে ব্যাখ্যা দাও কেন built-in function pure Python loop-এর চেয়ে দ্রুত (PVM dispatch overhead-এর সাথে যুক্ত করে)।"],
+  ["2.4 গ্লোবাল ইন্টারপ্রেটার লক (GIL)",
+   "GIL একটা mutex যা নিশ্চিত করে যেকোনো মুহূর্তে শুধু একটা thread bytecode execute করতে পারে — এটা refcounting simple ও thread-safe রাখে, কিন্তু CPU-bound multi-threaded code সত্যিকারের parallel চলতে পারে না। <b>২০২৫-২৬ আপডেট:</b> PEP 703/779-এর মাধ্যমে Python 3.13-এ (২০২৪) 'free-threaded build' experimental এসেছিল, Python 3.14-এ (অক্টোবর ২০২৫) এটা officially supported হয়েছে — কিন্তু এখনো default build না (আলাদা `3.14t` ট্যাগ দিয়ে install করতে হয়), পুরো ecosystem এখনো পুরোপুরি compatible না।",
+   "I/O-bound কাজে (web request, file read) threading এখনো ভালো কাজ করে কারণ I/O-এর সময় GIL release হয়। CPU-bound কাজে (image processing, ML preprocessing) আগে multiprocessing লাগত, free-threaded build দিয়ে এখন সরাসরি threading দিয়েও সম্ভব হচ্ছে।",
+   "multiprocessing (আলাদা process, GIL সমস্যা নেই কিন্তু IPC overhead), asyncio (single-thread concurrency, I/O-bound-এর জন্য), অথবা নতুন free-threaded Python build (3.14t)।",
+`import threading, time
+
+def cpu_bound_task(n):
+    count = 0
+    for _ in range(n):
+        count += 1
+    return count
+
+start = time.time()
+threads = [threading.Thread(target=cpu_bound_task, args=(10_000_000,)) for _ in range(4)]
+[t.start() for t in threads]
+[t.join() for t in threads]
+print("Threaded (GIL build):", time.time() - start)
+# সাধারণ GIL build-এ single-thread-এর কাছাকাছি সময় লাগবে
+# Python 3.14t (free-threaded) build-এ real speedup দেখা যাবে`,
+   "উপরের কোড ৪টা thread দিয়ে ও শুধু ১টা thread (sequential loop) দিয়ে চালিয়ে সময় compare করো — CPU-bound কাজে থ্রেডিং থেকে speedup না পাওয়ার কারণ ব্যাখ্যা করো।"]
+]},
+"3": { title:"অধ্যায় ৩ — C/C++-এর সাথে পাইথনের সংযোগ", sub:"C-API, Extension Modules, Performance", items:[
+  ["3.1 CPython C-API",
+   "CPython নিজেই C দিয়ে লেখা, আর একটা C-API expose করে যা দিয়ে C/C++ কোড থেকে Python object তৈরি/manipulate করা যায় (Py_BuildValue, PyArg_ParseTuple)। NumPy, Pandas-এর core performance-critical অংশ এভাবেই লেখা।",
+   "যখন pure Python অনেক ধীর (heavy numerical computation, image processing), তখন সেই hot path C/C++-এ লিখে Python থেকে call করা হয়।",
+   "সরাসরি C-API লেখা কঠিন ও verbose — তাই বেশিরভাগ মানুষ Cython, pybind11, বা ctypes/cffi ব্যবহার করে, যেগুলো C-API-এর উপর সহজ layer দেয়।",
+`// C ফাইলে থাকে — concept দেখানোর উদাহরণ
+#include <Python.h>
+
+static PyObject* fast_add(PyObject* self, PyObject* args) {
+    long a, b;
+    if (!PyArg_ParseTuple(args, "ll", &a, &b))
+        return NULL;
+    return PyLong_FromLong(a + b);
+}
+
+static PyMethodDef Methods[] = {
+    {"fast_add", fast_add, METH_VARARGS, "Add two integers in C"},
+    {NULL, NULL, 0, NULL}
+};
+
+static struct PyModuleDef mymodule = {
+    PyModuleDef_HEAD_INIT, "mymodule", NULL, -1, Methods
+};
+
+PyMODINIT_FUNC PyInit_mymodule(void) {
+    return PyModule_Create(&mymodule);
+}`,
+   "উপরের raw C-API উদাহরণ পড়ে বোঝো, তারপর নোট করো কেন বেশিরভাগ প্রজেক্ট এটা সরাসরি না লিখে Cython/pybind11 ব্যবহার করে (পরের topic-এ practical বিকল্প আছে)।"],
+  ["3.2 এক্সটেনশন মডিউল (ctypes দিয়ে সহজ পথ)",
+   "C-API সরাসরি লেখা জটিল, তাই <b>ctypes</b> (built-in) দিয়ে existing compiled C library (.so/.dll) থেকে function call করা সবচেয়ে সহজ practical উপায় — নিজে compile করতে হয় না।",
+   "System-level library (libc, OpenSSL) থেকে function call করতে, বা legacy C library Python থেকে ব্যবহার করতে।",
+   "cffi (built-in-এর কাছাকাছি বিকল্প), pybind11 (C++-এর জন্য বিশেষভাবে ভালো, modern syntax)।",
+`import ctypes
+
+# Linux/Mac-এ libc সরাসরি call করা
+libc = ctypes.CDLL("libc.so.6")   # Windows: ctypes.cdll.msvcrt
+libc.printf(b"Hello from C via ctypes: %d\\n", 42)
+
+# নিজের compiled .so থাকলে (gcc -shared -o mylib.so mylib.c):
+# mylib = ctypes.CDLL("./mylib.so")
+# mylib.add.restype = ctypes.c_int
+# print(mylib.add(3, 4))`,
+   "একটা ছোট C ফাইলে add(int, int) function লিখে shared library (.so) বানাও (gcc -shared -fPIC), তারপর ctypes দিয়ে Python থেকে call করো।"],
+  ["3.3 পারফরম্যান্স অপ্টিমাইজেশন",
+   "Pure Python loop ধীর কারণ প্রতিটা operation dynamic type check + PVM dispatch করে। <b>Cython</b> দিয়ে Python-এর মতো syntax লিখে static type annotation যোগ করলে সেটা সরাসরি C-এ কম্পাইল হয় — ১০-১০০x পর্যন্ত speedup।",
+   "Numerical computation, data pipeline-এর hot loop, যেখানে pure Python বেশি ধীর।",
+   "Numba (JIT, decorator-based, কম boilerplate), PyPy (পুরো interpreter বদলানো), NumPy vectorization (loop এড়িয়ে যাওয়া — প্রায়ই সবচেয়ে সহজ ও কার্যকর)।",
+`# fib.pyx (Cython ফাইল)
+def fib_cython(int n):
+    cdef int a = 0, b = 1, i
+    for i in range(n):
+        a, b = b, a + b
+    return a
+
+# setup.py:
+# from setuptools import setup
+# from Cython.Build import cythonize
+# setup(ext_modules=cythonize("fib.pyx"))
+# terminal: python setup.py build_ext --inplace
+
+# তুলনার জন্য pure Python:
+def fib_python(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a`,
+   "fib_python() বেঞ্চমার্ক করো timeit দিয়ে, তারপর @numba.jit decorator দিয়ে একই function-এ speedup measure করো (Numba install সহজ, Cython-এর চেয়ে কম setup লাগে)।"]
+]},
+"4": { title:"অধ্যায় ৪ — প্যাকেজিং, ডিস্ট্রিবিউশন ও pip", sub:"pyproject.toml, wheel/sdist, dependency resolution", items:[
+  ["4.1 পাইথন প্যাকেজিং স্ট্যান্ডার্ড",
+   "আধুনিক packaging-এর কেন্দ্রে <b>pyproject.toml</b> (PEP 518/621) — একটা single, tool-agnostic config যেখানে metadata, dependencies, build system থাকে। পুরনো setup.py (imperative, executable code) এখন legacy।",
+   "প্রতিটা modern Python package (pip install করা যেকোনো লাইব্রেরি) কোনো না কোনোভাবে এই standard মেনে বানানো।",
+   "Poetry, Hatch, PDM — pyproject.toml-এর উপর ভিত্তি করে বানানো higher-level tool যা dependency management ও publishing সহজ করে।",
+`# pyproject.toml — modern standard
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mypackage"
+version = "0.1.0"
+dependencies = [
+    "requests>=2.28",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black"]`,
+   "নিজের ছোট package-এর জন্য pyproject.toml লেখো (নাম, version, একটা dependency সহ), pip install -e . দিয়ে editable mode-এ install করে দেখো।"],
+  ["4.2 হুইল এবং সোর্স ডিস্ট্রিবিউশন",
+   "<b>.whl (wheel)</b> একটা pre-built, ready-to-install binary format — pip install সাধারণত এটাই ডাউনলোড করে (দ্রুত)। <b>sdist (.tar.gz)</b> raw source, দরকার হলে build করতে হয় (compile-heavy package-এ ধীর)।",
+   "NumPy-এর মতো C-extension-heavy লাইব্রেরি একাধিক platform/Python-version-এর জন্য আলাদা wheel বানিয়ে রাখে, যাতে user-কে compile করতে না হয়।",
+   "Conda-এর নিজস্ব প্যাকেজ ফরম্যাট আছে যা Python ছাড়াও system dependency handle করতে পারে — data science stack-এ জনপ্রিয়।",
+`# terminal — নিজের package থেকে wheel ও sdist বানানো
+pip install build
+python -m build
+# dist/mypackage-0.1.0-py3-none-any.whl
+# dist/mypackage-0.1.0.tar.gz`,
+   "python -m build চালিয়ে নিজের ছোট package-এর wheel বানাও, .whl ফাইলটা আসলে একটা zip — unzip করে ভেতরে কী আছে দেখো।"],
+  ["4.3 pip কীভাবে কাজ করে",
+   "pip install করলে: PyPI-এ package খোঁজা → <b>dependency resolution</b> (compatible version বের করা, conflict solve করার চেষ্টা) → wheel ডাউনলোড → site-packages-এ install। Resolution algorithm জটিল (SAT-solver-এর মতো), যার কারণে 'dependency conflict' error আসে।",
+   "প্রতিদিনের কাজ, কিন্তু বোঝা থাকলে 'ResolutionImpossible' error debug করা সহজ হয়।",
+   "uv (Rust-এ লেখা, অনেক দ্রুত resolver), Poetry-র নিজস্ব resolver, conda-র SAT-based resolver।",
+`pip install package-name --dry-run --report report.json
+# report.json-এ দেখা যাবে ঠিক কোন version resolve হলো এবং কেন
+
+pip show package-name   # dependency কোথা থেকে এলো
+pip check                # installed package-এর মধ্যে conflict আছে কিনা`,
+   "দুইটা এমন package (বা পুরনো project-এর dependency) install করো যাদের version conflict আছে, pip-এর error message পড়ে বোঝো ঠিক কী conflict হচ্ছে।"]
+]},
+"5": { title:"অধ্যায় ৫ — অ্যাডভান্সড ফ্রেমওয়ার্ক আর্কিটেকচার", sub:"Metaclasses & Decorators — যেভাবে বড় framework বানানো হয়", items:[
+  ["5.1 মেটাক্লাস ও ডেকোরেটর",
+   "Class-ও একটা object, আর সেটা কে তৈরি করে? — সেটাই <b>metaclass</b> (default: type)। class MyClass(metaclass=SomeMeta) লিখলে class definition-এর সময়েই SomeMeta-এর __new__/__init__ চলে, যা দিয়ে class-এর attribute automatically modify/register করা যায় — এটাই বড় framework-এর 'জাদু' syntax-এর পেছনের mechanism।",
+   "<b>Django</b>-এর ModelBase metaclass প্রতিটা models.Model subclass তৈরির সময় automatically field detect করে DB table schema বানায়। <b>SQLAlchemy</b>-র declarative base একইভাবে কাজ করে। <b>abc</b> module-এর ABCMeta দিয়ে abstract method enforce করা হয়।",
+   "Python 3.6+ থেকে অনেক ক্ষেত্রে <b>__init_subclass__</b> hook দিয়ে metaclass-এর কাজ সহজভাবে করা যায় (কম boilerplate) — তাই আধুনিক কোডে (Pydantic v2, dataclasses) প্রায়ই metaclass-এর বদলে এটাই ব্যবহার হয়।",
+`# Metaclass দিয়ে auto-registration pattern (Django-স্টাইল, সরলীকৃত)
+class PluginMeta(type):
+    registry = {}
+    def __new__(mcs, name, bases, namespace):
+        cls = super().__new__(mcs, name, bases, namespace)
+        if name != "PluginBase":
+            PluginMeta.registry[name] = cls
+        return cls
+
+class PluginBase(metaclass=PluginMeta):
+    pass
+
+class EmailPlugin(PluginBase):
+    pass
+
+class SMSPlugin(PluginBase):
+    pass
+
+print(PluginMeta.registry)
+
+# আধুনিক বিকল্প: __init_subclass__ (metaclass ছাড়াই একই কাজ)
+class PluginBaseModern:
+    registry = {}
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        PluginBaseModern.registry[cls.__name__] = cls
+
+class PushPlugin(PluginBaseModern):
+    pass
+
+print(PluginBaseModern.registry)`,
+   "Metaclass দিয়ে একটা auto-registering plugin system বানাও (উপরের মতো), তারপর একই জিনিস __init_subclass__ দিয়ে reimplement করো — কোনটা পড়তে সহজ লাগে তুলনা করো। তারপর একটা @log_call decorator লেখো যা function call হওয়ার সময় log করে — decorator আর metaclass-এর কাজের পার্থক্য নিজের ভাষায় ব্যাখ্যা করো (একটা function-level, একটা class-creation-level)।"]
+]}
+};
+
+const INSIGHTS = [
+  ["Level 1 — Basics", "Variable assignment আসলে name-binding, কোনো 'বক্সে value বসানো' না (Chapter 1.1/1.2 দেখো)। CPython -5 থেকে 256-এর integer আর কিছু ছোট string cache/intern করে রাখে — তাই ছোট সংখ্যার সাথে `is` ব্যবহার করলে ভুল ধারণা তৈরি হতে পারে।"],
+  ["Level 2 — Data Structures", "List একটা dynamic array যেটা over-allocation করে রাখে (তাই append() amortized O(1))। String immutable বলে loop-এ + দিয়ে concatenation করলে প্রতিবার নতুন object তৈরি হয় — এটা O(n²), তাই ''.join() ব্যবহার করা উচিত। Dict internally hash table (Golang-এর map-এর মতোই ধারণা)।"],
+  ["Level 3 — Functions", "Default argument-এর mutable trap সরাসরি Chapter 1.2-এর mutability concept থেকে আসে। Closure variable ধরে রাখে reference দিয়ে (late binding) — value দিয়ে না, তাই loop-এর ভেতর lambda/closure বানালে classic bug হয় (Golang-এর pre-1.22 loop-variable bug-এর সাথে concept একই)।"],
+  ["Level 4 — OOP", "Attribute lookup আসলে instance __dict__ → class __dict__ → MRO (Method Resolution Order, C3 linearization algorithm) চেইন ধরে খোঁজা হয়। এই chapter-ই সরাসরি Chapter 5.1 metaclass-এর ভিত্তি — class নিজেই কীভাবে তৈরি হয় সেটা এখান থেকেই আসে।"],
+  ["Level 5 — Error Handling", "Exception নিজেও একটা object (Exception ক্লাসের instance) — Chapter 1.1 object model এখানেও প্রযোজ্য। raise X from Y দিয়ে exception chaining করলে __cause__/__context__-এ পুরো traceback lineage সংরক্ষিত থাকে।"],
+  ["Level 6 — File & JSON", "with statement আসলে কোনো 'জাদু' না — এটা __enter__/__exit__ dunder method protocol মেনে চলে (context manager protocol)। এটা বুঝলে নিজের context manager বানানো সহজ হয়ে যায়।"],
+  ["Level 7 — Modules", "import করার সময় Python sys.modules নামের একটা cache-এ module রাখে — একই module দ্বিতীয়বার import করলে আবার execute হয় না, cache থেকে আসে। তাই module-level mutable state পুরো process জুড়ে shared থাকে (singleton-এর মতো আচরণ)।"],
+  ["Level 8 — Type Hints & Pydantic", "Type hint শুধু __annotations__-এ তথ্য হিসেবে জমা থাকে — Python নিজে থেকে runtime-এ এটা enforce করে না! Pydantic আসলে __init__-এর সময় manually validate করে, Python-এর built-in enforcement দিয়ে না — এটা অনেকেই ভুল বোঝে।"],
+  ["Level 9 — Decorators", "Decorator আসলে func = decorator(func)-এর syntactic sugar মাত্র। Chapter 5.1-এর সাথে সরাসরি সম্পর্ক — decorator function-level metaprogramming, metaclass class-level metaprogramming — দুটোই একই দর্শনের দুই স্তর।"],
+  ["Level 10 — Async", "asyncio আসলে single-threaded cooperative concurrency — generator/coroutine object-এর উপর ভিত্তি করে বানানো, event loop বারবার coroutine resume/suspend করে (Chapter 2.3 PVM frame suspension-এর সাথে সরাসরি যুক্ত)। GIL (Chapter 2.4) থাকা সত্ত্বেও I/O-bound কাজে asyncio ভালো কাজ করে কারণ থ্রেড লাগেই না।"],
+  ["Level 11 — Working with APIs", "requests library ভেতরে urllib3 দিয়ে connection pooling করে — একটা Session() object পুনর্ব্যবহার করলে TCP connection reuse হয়, প্রতিবার নতুন connection বানানোর চেয়ে অনেক efficient।"],
+  ["Level 12 — Generators", "Generator আসলে PVM frame suspension-এর একটা special case (Chapter 2.3 দেখো) — generator function call করলে body সাথে সাথে চলে না, বরং একটা frame object তৈরি হয় যেটা PVM later resume করতে পারে। async/await-ও এই একই নিচু-স্তরের mechanism-এর উপর ভিত্তি করে বানানো।"]
+];
+
+let totalCount = 0;
+const wrapA = document.getElementById('wrap-A');
+
+Object.keys(CHAPTERS).forEach((key) => {
+  const ch = CHAPTERS[key];
+  const details = document.createElement('details');
+  details.className = 'level';
+  if (key === "1") details.open = true;
+
+  const summary = document.createElement('summary');
+  summary.innerHTML = `
+    <div class="lvl-num">${key}</div>
+    <div class="lvl-titles">
+      <div class="lvl-title">${ch.title}</div>
+      <div class="lvl-sub">${ch.sub}</div>
+    </div>
+    <div class="lvl-count" id="count-${key}">0/${ch.items.length}</div>
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+  `;
+  details.appendChild(summary);
+
+  const progressTrack = document.createElement('div');
+  progressTrack.className = 'lvl-progress-track';
+  progressTrack.innerHTML = `<div class="lvl-progress-fill" id="fill-${key}" style="width:0%"></div>`;
+  details.appendChild(progressTrack);
+
+  const body = document.createElement('div');
+  body.className = 'lvl-body';
+
+  ch.items.forEach((it, ei) => {
+    totalCount++;
+    const [title, what, where, alt, code, practice] = it;
+    const item = document.createElement('div');
+    item.className = 'ex-item';
+    item.innerHTML = `
+      <div class="ex-row">
+        <input type="checkbox" class="ex-check" id="chk-${key}-${ei}" data-level="${key}">
+        <div class="ex-text">
+          <div class="ex-title">${title}</div>
+          <div class="ex-block ex-what"><b>🔍 কী এবং কেন:</b> ${what}</div>
+          <div class="ex-block ex-where"><b>📍 কোথায় ব্যবহার হয়:</b> ${where}</div>
+          <div class="ex-block ex-alt"><b>🔀 বিকল্প:</b> ${alt}</div>
+        </div>
+      </div>
+    `;
+    const codeWrap = document.createElement('div');
+    codeWrap.className = 'ex-code-wrap';
+    codeWrap.innerHTML = `<div class="ex-code-head">example</div>`;
+    const pre = document.createElement('pre');
+    pre.className = 'ex-code';
+    pre.textContent = code;
+    codeWrap.appendChild(pre);
+    item.querySelector('.ex-text').appendChild(codeWrap);
+
+    const practiceDiv = document.createElement('div');
+    practiceDiv.className = 'ex-block ex-practice';
+    practiceDiv.innerHTML = `<b>✏️ Practice:</b> ${practice}`;
+    item.querySelector('.ex-text').appendChild(practiceDiv);
+
+    body.appendChild(item);
+  });
+
+  details.appendChild(body);
+  wrapA.appendChild(details);
+});
+
+// Part B — insight cards (no checkboxes, pure reading/connection layer)
+const wrapB = document.getElementById('wrap-B');
+INSIGHTS.forEach(([title, insight]) => {
+  const card = document.createElement('div');
+  card.style.cssText = 'border:1px solid var(--line); border-radius:10px; background:var(--bg-panel); padding:14px 18px;';
+  card.innerHTML = `
+    <div style="font-family:var(--mono); font-weight:700; font-size:13.5px; color:#fff; margin-bottom:8px;">${title}</div>
+    <div class="insight-box"><b>💡 Deeper insight:</b> ${insight}</div>
+  `;
+  wrapB.appendChild(card);
+});
+
+document.getElementById('statTotal').textContent = totalCount;
+
+function updateAll(){
+  let doneTotal = 0;
+  Object.keys(CHAPTERS).forEach((key) => {
+    const ch = CHAPTERS[key];
+    const checks = document.querySelectorAll(`input[data-level="${key}"]`);
+    let doneCount = 0;
+    checks.forEach(c => { if (c.checked) doneCount++; });
+    doneTotal += doneCount;
+    document.getElementById(`count-${key}`).textContent = `${doneCount}/${ch.items.length}`;
+    document.getElementById(`count-${key}`).classList.toggle('complete', doneCount === ch.items.length);
+    const pct = (doneCount / ch.items.length) * 100;
+    const fill = document.getElementById(`fill-${key}`);
+    fill.style.width = pct + '%';
+    fill.classList.toggle('complete', pct === 100);
+  });
+  document.getElementById('statDone').textContent = doneTotal;
+  document.getElementById('topText').textContent = `${doneTotal} / ${totalCount}`;
+  document.getElementById('topFill').style.width = totalCount ? (doneTotal/totalCount*100) + '%' : '0%';
+}
+
+document.body.addEventListener('change', (e) => {
+  if (e.target.classList.contains('ex-check')) {
+    e.target.closest('.ex-item').classList.toggle('done', e.target.checked);
+    updateAll();
+  }
+});
+
+function resetAll(){
+  if(!confirm('সব checkmark মুছে ফেলতে চাও?')) return;
+  document.querySelectorAll('.ex-check').forEach(c => {
+    c.checked = false;
+    c.closest('.ex-item').classList.remove('done');
+  });
+  updateAll();
+}
+
+updateAll();
+</script>
+
+</body>
+</html>
