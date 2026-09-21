@@ -1,0 +1,36 @@
+# 1. Create and navigate to your project directory
+mkdir my_new_project && cd my_new_project
+
+# 2. Set up and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# 3. Install Django
+pip install django
+
+
+# Create the Project
+django-admin startproject myproject .
+
+cd myproject
+
+# Create the App
+python manage.py startapp myapp
+
+
+# To check the installtion 
+python manage.py runserver
+
+
+# Run initial database migrations and start the server
+python manage.py makemigrations
+
+python manage.py migrate
+
+python manage.py makemigrations <appname>
+
+python manage.py migrate
+
+python manage.py createsuperuser
+
+python manage.py runserver

@@ -17,6 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# Customize Admin Panel Headings
+admin.site.site_header = "Prerana Login Page"
+admin.site.site_title = "Portal Login"
+admin.site.index_title = "Welcome to My Dashboard"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('booking.urls')),
