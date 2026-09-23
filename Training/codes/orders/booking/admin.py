@@ -10,6 +10,7 @@ from django.utils.html import format_html
 class OrderModelAdmin(admin.ModelAdmin):
 
     list_display = ('customer_name', 'division', 'unit_or_spares', 'model', 'so_number', 'order_date', 'value', 'booking_account')
+    search_fields = ('customer_name','so_number',)
 
 @admin.register(UploadedFile)
 class MyModelAdmin(admin.ModelAdmin):
