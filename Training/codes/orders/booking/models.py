@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils.html import format_html
 
 # Create your models here.
 
@@ -45,7 +46,7 @@ class UploadedFile(models.Model):
     order = models.ForeignKey(
         Orders, 
         on_delete=models.CASCADE, 
-        related_name='files'
+        related_name='file'
     )
     title = models.CharField(max_length=80)
     file = models.FileField(upload_to='uploads/', validators=[validate_file_size])
@@ -54,7 +55,14 @@ class UploadedFile(models.Model):
     def __str__(self):
             # This displays the actual file name instead of "<UploadedFile object>"
             return f"{self.order} - {self.uploaded_at}"
+    # def __order__(self):
+    #      return f"{self.order}"
 
+    # def show_content(self):
+    #     return format_html(self.content)
+
+
+# ==========================================================
 # class OrdersForm(forms.ModelForm):
 #     class Meta:
 #         model = Orders

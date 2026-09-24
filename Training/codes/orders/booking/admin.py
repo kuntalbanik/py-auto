@@ -14,7 +14,8 @@ class OrderModelAdmin(admin.ModelAdmin):
 
 @admin.register(UploadedFile)
 class MyModelAdmin(admin.ModelAdmin):
-    list_display = ('order', 'open_file_link') 
+    list_display = ('order', 'open_file_link')
+    # search_fields = ('',)
 
     @admin.display(description='Uploaded File')
     def open_file_link(self, obj):
