@@ -9,6 +9,8 @@ def validate_file_size(value):
     if value.size > limit:
         raise ValidationError("File size cannot exceed 3 MB.")
 
+# class Booking_Account(models.Model):
+#     booking_account = models.CharField(max_length=60)
 class Orders(models.Model):
     customer_name = models.CharField(max_length=255)
     cbg_or_non_cbg = models.CharField(max_length=15)
@@ -29,6 +31,7 @@ class Orders(models.Model):
     month = models.CharField(max_length=9)
     year = models.CharField(max_length=8)
     booking_account = models.CharField(max_length=40)
+    # booking_account = models.ForeignKey(Booking_Account, on_delete=models.CASCADE, related_name='account')
     # file = models.FileField(upload_to='uploads/%Y/%m/%d/', validators=[validate_file_size])
 
     def __str__(self):

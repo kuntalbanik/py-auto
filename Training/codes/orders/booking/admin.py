@@ -15,7 +15,14 @@ class OrderModelAdmin(admin.ModelAdmin):
 @admin.register(UploadedFile)
 class MyModelAdmin(admin.ModelAdmin):
     list_display = ('order', 'open_file_link')
-    # search_fields = ('',)
+
+    #
+    # Search data using foreignkey
+    search_fields = ('order__customer_name', 'order__so_number',)
+
+    #
+    # Dropdown converts to search box
+    autocomplete_fields = ['order']
 
     @admin.display(description='Uploaded File')
     def open_file_link(self, obj):
